@@ -16,21 +16,20 @@ use Twig\Error\SyntaxError;
 
 class ConferenceController extends AbstractController
 {
+    private $twig;
+    public function __construct(Environment $twig)
+    {
+        $this->twig = $twig;
+    }
+
     /**
      * @Route("/", name="homepage")
-     * @param Environment $twig
      * @param ConferenceRepository $conferenceRepository
      * @return Response
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
      */
-
-    private $twig;
-    public function __construct(Environment $twig)
-    {
-        $this->twig = $twig;
-    }
 
     public function index(ConferenceRepository $conferenceRepository)
     {
@@ -40,6 +39,7 @@ class ConferenceController extends AbstractController
     /**
      * @Route("/conference/{id}", name="conference")
      * @param Request $request
+     * @param ConferenceRepository $conferenceRepository
      * @param Conference $conference
      * @param CommentRepository $commentRepository
      * @return Response
@@ -48,12 +48,13 @@ class ConferenceController extends AbstractController
      * @throws SyntaxError
      */
 
-    public function show(Request $request, Conference $conference, CommentRepository $commentRepository)
+    public function show(Request $request, ConferenceRepository $conferenceRepository, Conference $conference, CommentRepository $commentRepository)
     {
         $offset = max(0, $request->query->getInt('offset', 0));
         $paginator = $commentRepository->getCommentPaginator($conference, $offset);
         return new Response($this->twig->render('conference/show.html.twig',
             [
+                'conferences' => $conferenceRepository->findAll(),
                 'conference' => $conference,
                 //'comments' => $commentRepository->findBy(['conference'=>$conference], ['createdAt'=>'DESC'])
                 'comments' => $paginator,
