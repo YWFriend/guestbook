@@ -13,9 +13,6 @@
     {% if comments|length > 0 %}
         <p>There are {{ comments|length }} comments</p>
         {% for comment in comments %}
-            {% if comment.photofilename %}
-                <img src="{{ asset('uploads/photos/' ~ comment.photofilename) }}" />
-            {% endif %}
             <h4>{{ comment.author }}</h4>
             <small>
                 {{ comment.createdAt|format_datetime('medium', 'short') }}
@@ -24,8 +21,11 @@
                 {% autoescape %}
                     {{ comment.text|raw }}
                 {% endautoescape %}
-
             </p>
+            {% if comment.photofilename %}
+                <img style="max-width: 400px;" src="{{ asset('uploads/photos/' ~ comment.photofilename) }}" />
+            {% endif %}
+            <hr />
         {% endfor %}
         {% if previous >= 0 %}
             <a href="{{ path('conference', {id: conference.id, offset:previous}) }}">Previous</a>

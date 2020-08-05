@@ -9,6 +9,7 @@ use App\Repository\CommentRepository;
 use App\Repository\ConferenceRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -54,13 +55,22 @@ class ConferenceController extends AbstractController
      * @throws SyntaxError
      */
 
-    public function show(Request $request, ConferenceRepository $conferenceRepository, Conference $conference, CommentRepository $commentRepository)
+    public function show(Request $request, ConferenceRepository $conferenceRepository, Conference $conference, CommentRepository $commentRepository, string $photoDir)
     {
         $comment = new Comment();
         $form = $this->createForm(CommentFormType::class, $comment);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()){
             $comment->setConference($conference);
+            if ($photo = $form['photo']->getData()){
+                $filename =bin2hex(random_bytes(6)).'.'.$photo->guessExtension();
+                try {
+                    $photo->move($photoDir, $filename);
+                } catch (FileException $e){
+                    //Unable to upload the photo
+                }
+                $comment->setPhotoFilename($filename);
+            }
 
             $this->entityManager->persist($comment);
             $this->entityManager->flush();
